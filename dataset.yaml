@@ -1,0 +1,26 @@
+# Dataset YAML pentru YOLOv8 - Seră Hidroponică Smart
+# Detectare probleme de sănătate la roșii Micro Tom
+
+# Cale către directorul dataset (relativă sau absolută)
+path: ./dataset
+
+# Căi către imagini train/val
+train: images/train
+val: images/val
+
+# Numărul de clase - modifică în funcție de categoriile tale
+nc: 4
+
+# Numele claselor - exemple pentru sănătatea plantelor
+# Adaptează conform nevoilor tale
+names:
+  0: healthy          # Plantă sănătoasă
+  1: nutrient_deficiency  # Deficiență de nutrienți
+  2: disease          # Boală (bacteriană/fungică)
+  3: pest_damage      # Daune de dăunători
+
+# Note pentru proiectul tău:
+# - Imaginile trebuie să fie în format: .jpg, .jpeg, .png
+# - Fișierele de etichete (.txt) trebuie să aibă același nume ca imaginile
+# - Format etichetă YOLO: <class_id> <x_center> <y_center> <width> <height>
+# - Toate valorile sunt normalizate între 0 și 1
