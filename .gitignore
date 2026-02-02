@@ -1,0 +1,54 @@
+# 🍅 Sera Hidroponica - Git Ignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+nohup.out
+
+# YOLOv8 - Modele mari (descarcă automat la rulare)
+*.pt
+!runs/detect/*/weights/best.pt
+
+# Rezultate antrenament - păstrează doar best.pt
+runs/detect/*/weights/last.pt
+runs/detect/*/*.png
+runs/detect/*/*.jpg
+runs/detect/*/labels/
+
+# Dataset cache
+*.cache
+*.npy
+
+# Modele pretrained (se descarcă automat)
+yolov8*.pt
+
+# Temporary
+*.tmp
+*.temp
+.temp/
+
+# OS
+Thumbs.db
+.DS_Store
+*.bak

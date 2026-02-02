@@ -1,0 +1,20 @@
+# Dataset YOLOv8 - Tomato Leaf Disease Detection
+# Generat automat pentru proiectul Seră Hidroponică Smart
+
+path: ./dataset
+train: images/train
+val: images/val
+
+# Numărul de clase
+nc: 4
+
+# Denumirea claselor (subset pentru demo)
+names:
+  0: healthy
+  1: bacterial_spot
+  2: early_blight
+  3: late_blight
+
+# Note:
+# - Pentru antrenament real, descarcă dataset-ul complet PlantVillage
+# - Acest dataset demo este doar pentru testarea pipeline-ului
