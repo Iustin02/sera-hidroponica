@@ -1,7 +1,7 @@
 # Tomato Leaf Disease Dataset
 # Generat pentru antrenament YOLOv8
 
-path: /Users/iustiniuliandodita/sera-hidroponica/tomato_real
+path: D:/sera-hidroponica/tomato_real
 train: images/train
 val: images/val
 
