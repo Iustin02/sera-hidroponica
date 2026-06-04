@@ -1,8 +1,14 @@
 # 🌿 Seră Hidroponică Smart - YOLOv8 (busuioc/mentă)
 
-Repo-ul a fost curățat de tot ce ține de training/dataset pentru tomate. Pipeline-ul curent folosește un dataset iNaturalist pentru **busuioc** și **mentă** (imagini + bbox full-frame), util pentru „detecție prezență plantă” / demo.
+Repo-ul a fost curățat de tot ce ține de training/dataset pentru tomate. Pipeline-ul curent folosește un dataset iNaturalist pentru **busuioc** și **mentă** (imagini + bbox pe plantă), util pentru „detecție prezență plantă” / demo.
 
-> Pentru **boli/deficiențe** reale ai nevoie de un dataset adnotat (bbox pe simptome + clase de boală/deficiență).
+De asta NU vezi clase gen `early_blight`: iNaturalist nu îți dă etichete de boală. Ca să ai clasificare/Detecție pe boli/deficiențe trebuie:
+1) un `data.yaml` cu **clasele de boală**
+2) label-uri YOLO care folosesc acele ID-uri (bbox pe simptome).
+
+Am adăugat un template:
+- `examples/disease_data_4cls.yaml`
+- `init_disease_dataset.py` (îți creează structura + `datasets/herbs_disease/data.yaml`)
 
 ## 🚀 Quick start (Windows)
 

@@ -54,6 +54,9 @@ yolov8*.pt
 # iNaturalist datasets (local)
 inat_datasets/
 
+# Local datasets (do not commit)
+datasets/
+
 # Derived datasets (local)
 
 # OS

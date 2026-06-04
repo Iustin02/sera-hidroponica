@@ -1,0 +1,51 @@
+# Queries for Wikimedia Commons image search (namespace File:)
+# Tweak queries if a class returns too few relevant images.
+
+classes:
+  basil_downy_mildew:
+    - "basil downy mildew"
+    - "Peronospora belbahrii"
+  basil_fusarium_wilt:
+    - "Fusarium wilt basil"
+    - "Fusarium wilt"
+    - "Fusarium oxysporum"
+    - "Fusarium oxysporum wilt"
+  basil_bacterial_leaf_spot:
+    - "basil bacterial leaf spot"
+    - "bacterial leaf spot"
+    - "bacterial spot leaf"
+    - "Xanthomonas leaf spot"
+    - "Pseudomonas leaf spot"
+    - "Xanthomonas"
+  basil_gray_mold_botrytis:
+    - "Botrytis cinerea basil"
+    - "Botrytis cinerea"
+    - "Botrytis"
+    - "gray mold"
+
+  mint_rust:
+    - "mint rust"
+    - "Puccinia menthae"
+  mint_verticillium_wilt:
+    - "Verticillium wilt mint"
+    - "Verticillium wilt"
+    - "Verticillium dahliae"
+    - "Verticillium wilt symptoms"
+  mint_powdery_mildew:
+    - "powdery mildew mint"
+    - "powdery mildew"
+    - "powdery mildew leaf"
+    - "Erysiphe"
+    - "Erysiphe menthae"
+  mint_leaf_spot:
+    - "mint leaf spot"
+    - "leaf spot"
+    - "Cercospora leaf spot"
+    - "Septoria leaf spot"
+    - "Cercospora"
+    - "Septoria"
+  mint_anthracnose:
+    - "mint anthracnose"
+    - "anthracnose"
+    - "anthracnose leaf"
+    - "Colletotrichum"
