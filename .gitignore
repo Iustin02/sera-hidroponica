@@ -1,4 +1,4 @@
-# 🍅 Sera Hidroponica - Git Ignore
+# Sera Hidroponica - Git Ignore
 
 # Python
 __pycache__/
@@ -36,6 +36,9 @@ runs/detect/*/*.png
 runs/detect/*/*.jpg
 runs/detect/*/labels/
 
+# Local autolabel runs (contain images)
+runs/autolabel/
+
 # Dataset cache
 *.cache
 *.npy
@@ -47,6 +50,11 @@ yolov8*.pt
 *.tmp
 *.temp
 .temp/
+
+# iNaturalist datasets (local)
+inat_datasets/
+
+# Derived datasets (local)
 
 # OS
 Thumbs.db

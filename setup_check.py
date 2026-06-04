@@ -8,6 +8,13 @@ import sys
 import platform
 import subprocess
 
+# Evită UnicodeEncodeError pe Windows (mai ales când output-ul e piped)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 def check_python():
     """Verifică versiunea Python."""
     version = sys.version_info
@@ -62,33 +69,35 @@ def check_ultralytics():
         return False
 
 def check_dataset():
-    """Verifică existența dataset-ului."""
+    """Verifică existența unui dataset YOLO (local)."""
     from pathlib import Path
-    
+
     print("\n📁 Dataset:")
-    
+
+    # Dataset-ul iNaturalist (busuioc/mentă) este ținut local și ignorat din git.
+    default_inat = Path("inat_datasets/inat_basil_mint_20k/data.yaml")
+
     paths_to_check = [
-        ("data.yaml", "Configurație principală"),
-        ("tomato_real/data.yaml", "Configurație tomato_real"),
-        ("tomato_real/images/train", "Imagini train"),
-        ("tomato_real/images/val", "Imagini validare"),
+        (default_inat, "Configurație iNaturalist (busuioc/mentă)"),
+        (Path("inat_datasets"), "Folder iNaturalist (local)"),
     ]
-    
+
     found = False
-    for path, desc in paths_to_check:
-        p = Path(path)
+    for p, desc in paths_to_check:
         if p.exists():
             if p.is_dir():
-                count = len(list(p.glob("*.jpg"))) + len(list(p.glob("*.png")))
-                print(f"   ✅ {desc}: {path} ({count} imagini)")
+                n = len(list(p.rglob("*.jpg"))) + len(list(p.rglob("*.png")))
+                print(f"   ✅ {desc}: {p} ({n} imagini)")
             else:
-                print(f"   ✅ {desc}: {path}")
+                print(f"   ✅ {desc}: {p}")
             found = True
-    
+
     if not found:
-        print("   ⚠️  Nu am găsit dataset!")
-        print("   Rulați: python prepare_dataset.py")
-    
+        print("   ⚠️  Nu am găsit niciun dataset local.")
+        print("   Pentru busuioc/mentă (iNaturalist), rulează:")
+        print("     python download_inat_yolo.py --out inat_datasets\\inat_basil_mint_20k --per-class 10000 --val-per-class 1000")
+        print("   Sau rulează train cu --data către propriul data.yaml.")
+
     return found
 
 def print_recommendations(device):

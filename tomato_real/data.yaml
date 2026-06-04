@@ -1,9 +1,0 @@
-# Tomato Leaf Disease Dataset
-# Generat pentru antrenament YOLOv8
-
-path: D:/sera-hidroponica/tomato_real
-train: images/train
-val: images/val
-
-nc: 6
-names: ['healthy', 'bacterial_spot', 'early_blight', 'late_blight', 'leaf_mold', 'septoria_leaf_spot']

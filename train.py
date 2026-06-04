@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-🍅 SERA HIDROPONICĂ SMART - ANTRENAMENT YOLOV8
-Script hibrid: funcționează pe CUDA (NVIDIA), MPS (Apple Silicon) sau CPU
+🌿 SERA HIDROPONICĂ SMART - ANTRENAMENT YOLOV8
+Script hibrid: funcționează pe CUDA (NVIDIA), MPS (Apple Silicon) sau CPU.
 
-Autor: Iustin
-Proiect: Licență - Detecție boli frunze roșii Micro Tom
+Acest repo nu mai include training/dataset pentru roșii. Exemplul curent este
+pentru busuioc/mentă (iNaturalist) sau orice dataset YOLO furnizat prin --data.
 """
 
 import os
@@ -14,8 +14,59 @@ import platform
 from pathlib import Path
 from datetime import datetime
 
+import yaml
+
+# Evită UnicodeEncodeError pe Windows (mai ales când output-ul e piped)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 # Setări pentru a evita probleme cu matplotlib
 os.environ['MPLBACKEND'] = 'Agg'
+
+IMG_EXTS = {'.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff', '.webp'}
+
+
+def _get_train_images_dir(data_yaml: str) -> Path:
+    cfg = yaml.safe_load(Path(data_yaml).read_text(encoding='utf-8'))
+    root = Path(cfg.get('path', Path(data_yaml).parent))
+    train = cfg.get('train')
+    if not train:
+        return root
+
+    p = Path(train)
+    return p if p.is_absolute() else (root / p)
+
+
+def _count_images(path: Path) -> int:
+    if not path.exists():
+        return 0
+    return sum(1 for p in path.rglob('*') if p.is_file() and p.suffix.lower() in IMG_EXTS)
+
+
+def _resolve_cache_mode(cache_arg: str, device: str, data_yaml: str):
+    """Mapează CLI cache -> parametrul ultralytics `cache`.
+
+    Ultralytics acceptă: False | True('ram') | 'disk'.
+    """
+    cache_arg = (cache_arg or 'auto').lower()
+
+    if cache_arg == 'false':
+        return False
+    if cache_arg == 'disk':
+        return 'disk'
+    if cache_arg == 'ram':
+        return True
+
+    # auto
+    if device != 'cuda':
+        return False
+
+    n = _count_images(_get_train_images_dir(data_yaml))
+    # Pe dataset-uri mari evităm RAM cache (poate crăpa); disk cache e mai sigur.
+    return 'disk' if n >= 8000 else True
 
 def detect_device():
     """
@@ -67,8 +118,9 @@ def train(
     model_size: str = 'n',  # n=nano, s=small, m=medium, l=large, x=xlarge
     batch_size: int = None,
     imgsz: int = 640,
-    project_name: str = 'tomato_disease',
-    resume: bool = False
+    project_name: str = 'herbs_yolo',
+    resume: bool = False,
+    cache: str = 'auto',
 ):
     """
     Antrenează modelul YOLOv8 pentru detecția bolilor.
@@ -84,7 +136,7 @@ def train(
     """
     
     print("=" * 60)
-    print("🍅 SERA HIDROPONICĂ - ANTRENAMENT YOLOV8")
+    print("🌿 SERA HIDROPONICĂ - ANTRENAMENT YOLOV8")
     print("=" * 60)
     print(f"   Data: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print(f"   OS: {platform.system()} {platform.release()}")
@@ -105,15 +157,25 @@ def train(
     print(f"   Epoci: {epochs}")
     print(f"   Batch size: {batch_size}")
     print(f"   Image size: {imgsz}x{imgsz}")
+    print(f"   Cache: {cache}")
     
     # Calea către data.yaml
     if data_yaml is None:
         # Caută automat
-        possible_paths = [
-            Path("data.yaml"),
-            Path("tomato_real/data.yaml"),
-            Path("dataset/data.yaml"),
-        ]
+        possible_paths = []
+
+        # 1) iNaturalist herbs dataset (default)
+        default_inat = Path("inat_datasets/inat_basil_mint_20k/data.yaml")
+        possible_paths.append(default_inat)
+
+        # 2) Orice alt dataset local în inat_datasets/**/data.yaml
+        inat_root = Path("inat_datasets")
+        if inat_root.exists():
+            possible_paths += sorted(inat_root.rglob("data.yaml"))
+
+        # 3) Fallback pentru dataset-uri custom în root
+        possible_paths.append(Path("data.yaml"))
+
         for p in possible_paths:
             if p.exists():
                 data_yaml = str(p)
@@ -136,10 +198,12 @@ def train(
     
     # Configurație workers
     workers = 8 if device == 'cuda' else 0
-    
+
+    cache_mode = _resolve_cache_mode(cache, device, data_yaml)
+
     print(f"\n🚀 Pornesc antrenamentul...")
     print("-" * 60)
-    
+
     # Antrenare
     results = model.train(
         data=data_yaml,
@@ -147,7 +211,7 @@ def train(
         imgsz=imgsz,
         batch=batch_size,
         device=device,
-        project='runs/detect',
+        project=str(Path('runs') / 'detect'),
         name=project_name,
         exist_ok=True,
         patience=30,  # Early stopping
@@ -156,20 +220,24 @@ def train(
         verbose=True,
         workers=workers,
         amp=True,  # Mixed precision (mai rapid pe CUDA)
-        cache=True if device == 'cuda' else False,  # Cache imagini în RAM
+        cache=cache_mode,
+        resume=resume,
     )
     
     print("\n" + "=" * 60)
     print("✅ ANTRENAMENT FINALIZAT!")
     print("=" * 60)
     
-    # Afișează rezultatele
-    results_dir = Path(f'runs/detect/{project_name}')
-    
-    print(f"\n📁 Rezultate salvate în: {results_dir}")
-    print(f"   📊 Weights: {results_dir}/weights/best.pt")
-    print(f"   📈 Grafice: {results_dir}/results.png")
-    
+    # Afișează rezultatele (folosește direct save_dir din Ultralytics)
+    results_dir = Path(str(getattr(results, 'save_dir', '')))
+
+    if str(results_dir) and results_dir.exists():
+        print(f"\n📁 Rezultate salvate în: {results_dir}")
+        print(f"   📊 Weights: {results_dir / 'weights' / 'best.pt'}")
+        print(f"   📈 Grafice: {results_dir / 'results.png'}")
+    else:
+        print("\n📁 Rezultate salvate (Ultralytics):", getattr(results, 'save_dir', '(necunoscut)'))
+
     return results
 
 
@@ -178,7 +246,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(
-        description='🍅 Antrenament YOLOv8 pentru detecție boli plante',
+        description='🌿 Antrenament YOLOv8 pentru seră hidroponică (busuioc/mentă sau dataset custom)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Exemple:
@@ -200,10 +268,13 @@ Exemple:
                         help='Batch size (auto dacă nespecificat)')
     parser.add_argument('--imgsz', type=int, default=640,
                         help='Dimensiunea imaginilor (default: 640)')
-    parser.add_argument('--name', type=str, default='tomato_disease',
-                        help='Numele proiectului')
+    parser.add_argument('--name', type=str, default='herbs_yolo',
+                        help='Numele run-ului (folder sub runs\\detect\\)')
     parser.add_argument('--resume', action='store_true',
                         help='Continuă antrenamentul anterior')
+    parser.add_argument('--cache', type=str, default='auto',
+                        choices=['auto', 'ram', 'disk', 'false'],
+                        help='Cache imagini: auto/ram/disk/false (default: auto)')
     
     args = parser.parse_args()
     
@@ -214,7 +285,8 @@ Exemple:
         batch_size=args.batch,
         imgsz=args.imgsz,
         project_name=args.name,
-        resume=args.resume
+        resume=args.resume,
+        cache=args.cache,
     )
 
 
