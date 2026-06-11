@@ -16,49 +16,31 @@ Proiectul exista deja cu mai multe fișiere și scripturi de antrenare, dar făr
 |---|---|---|---|
 | `basil_dataset/` | Detection (YOLO bbox) | 5 clase | ~800 train |
 | `basil_classification_dataset/` | Classification (foldere) | 3 clase | 941 train |
-| `Downloads/Basil Health Detection/` | Classification (foldere) | 3 clase | identic cu cel din proiect |
-
-**Clase în `basil_dataset` (5 clase — Roboflow):**
-- `healthy`
-- `downy_mildew`
-- `bacterial_leaf_spot`
-- `leaf_miner_damage`
-- `general_disease`
 
 **Clase în `basil_classification_dataset` (3 clase — Roboflow):**
-- `healthy`
-- `fusarium`
-- `powdery`
+- `healthy`, `fusarium`, `powdery`
 
 ### Model existent la start
 
-Script: `train_basil_complete.py` → `yolov8n.pt` pe `basil_dataset` (5 clase)
-
-Antrenament: **3 epoci** (s-a oprit manual sau prin eroare)
+Script: `train_basil_complete.py` → `yolov8n.pt` pe `basil_dataset` (5 clase), **3 epoci** (nefuncțional)
 
 | Metrică | Valoare |
 |---|---|
-| mAP50 | 0.076 (epoca 1) |
+| mAP50 | 0.076 |
 | Precision | 0.666 |
 | Recall | 0.199 |
-
-**Concluzie:** model nefuncțional, epoci insuficiente, clase nealiniate cu obiectivul proiectului.
 
 ---
 
 ## Decizie arhitecturală — schema finală de 3 clase
 
-**Motivație:** 5 clase sunt prea multe pentru un model nano pe Raspberry Pi 5, și nu se aliniază cu logica de control PID (healthy / disease / nutrient issue).
-
-**Schema aleasă** (fișier `BASIL_DETECTION_CLASS_SCHEMA.md`):
+**Schema aleasă** (`BASIL_DETECTION_CLASS_SCHEMA.md`):
 
 | ID | Clasă | Denumire simplă |
 |---|---|---|
 | 0 | `healthy` | sănătoasă |
 | 1 | `Fusarium oxysporum` | fusarioză |
 | 2 | `Oidium belbahrii` | făinare |
-
-**De ce aceste 2 boli:** sunt cele mai frecvente la busuioc în sisteme hidroponic și există imagini reale în dataset-ul descărcat (`fusarium` și `powdery` din `basil_classification_dataset`).
 
 **Mapping control:**
 - `healthy` → nicio acțiune
@@ -67,87 +49,162 @@ Antrenament: **3 epoci** (s-a oprit manual sau prin eroare)
 
 ---
 
-## Trial 0 — Conversie dataset classification → detection
+## Ramura Detection (abandonată temporar)
 
-**Fișier:** `build_detection_dataset.py`
-**Output:** `basil_detection_3class/`
+### Trial D1 — Detection v1 (full-image boxes)
 
-**Ce s-a făcut:** dataset-ul de clasificare (foldere pe clasă, fără bbox) a fost convertit în format YOLO detection prin generarea de bounding box-uri care acoperă întreaga imagine.
-
-| Parametru | Valoare |
-|---|---|
-| Box size | `0.5 0.5 1.0 1.0` (full-image) |
-| Train | 941 imagini |
-| Val | 269 imagini |
-| Test | 134 imagini |
-
-**Problema identificată ulterior:** box-urile 1.0×1.0 acoperă perfect toată imaginea. Combinate cu mosaic augmentation (care unește 4 imagini), modelul învață să detecteze simultan mai multe boli pe aceeași imagine. La inferență pe o singură imagine prezice multiple box-uri suprapuse → NMS ineficient → precision scăzut.
-
----
-
-## Trial 1 — Primul antrenament (v1)
-
-**Script:** `train_detection_3class.py`
 **Run:** `runs/detect/runs/detect/basil_3class/`
 
-**Configurație:**
-
 | Parametru | Valoare |
 |---|---|
-| Model | `yolov8n.pt` (detection) |
-| Dataset | `basil_detection_3class/` (3 clase) |
-| Epoci | 100 (early stop la 25) |
-| Patience | 5 |
-| imgsz | 416 |
-| Batch | 16 |
-| Device | MPS (Apple M1 Pro) |
-| Mosaic | activat (default 1.0) |
-| Box loss weight | 7.5 (default) |
-| Cls loss weight | 0.5 (default) |
-| Box size în dataset | 1.0×1.0 (full-image) |
-
-**Rezultate — cea mai bună epocă (20/25):**
+| Model | `yolov8n.pt` |
+| Box size | 1.0×1.0 (full-image) |
+| Mosaic | activat |
+| Epoci | 25/100 (early stop) |
 
 | Metrică | Valoare |
 |---|---|
-| mAP50 | **0.654** |
-| mAP50-95 | 0.624 |
+| mAP50 | 0.654 |
 | Precision | 0.477 ❌ |
 | Recall | 0.861 ✅ |
 
-**Problema:** Recall bun (modelul găsește boala), dar Precision scăzut (prea multe false positives). Cauza: mosaic + full-image boxes.
+**Problemă:** Precision scăzut structural — mosaic + full-image boxes cauzează false positives.
 
-**Early stop:** La epoca 25 (fără îmbunătățiri față de epoca 20).
+### Trial D2 — Detection v2 (fix precision)
 
----
+**Run:** `runs/detect/runs/detect/basil_3class_v2/`
 
-## Trial 2 — Fix precision (v2) — în curs
+| Modificare | Valoare |
+|---|---|
+| Box size | 0.85×0.85 |
+| Mosaic | 0.0 (dezactivat) |
+| Box loss | 3.0 (↓ de la 7.5) |
+| Cls loss | 1.5 (↑ de la 0.5) |
 
-**Script:** `train_detection_3class.py`
-**Run:** `runs/detect/basil_3class_v2/`
+| Metrică | Valoare |
+|---|---|
+| mAP50 | **0.443** ❌ (mai slab decât D1) |
+| Precision | 0.368 |
 
-**Modificări față de Trial 1:**
+**Concluzie:** Dezactivarea mosaic a eliminat augmentarea principală → model mai slab. Detection cu full-image boxes are un plafon structural și nu poate atinge precision ridicat fără bbox-uri reale adnotate.
 
-| Parametru | Trial 1 | Trial 2 | Motiv |
-|---|---|---|---|
-| Box size | 1.0×1.0 | **0.85×0.85** | reduce suprapunerea perfectă a box-urilor |
-| Mosaic | 1.0 (activ) | **0.0 (dezactivat)** | mosaic cu full-image boxes confundă detectorul |
-| Box loss weight | 7.5 | **3.0** | localizarea e mai puțin importantă decât clasificarea |
-| Cls loss weight | 0.5 | **1.5** | accent pe clasificarea corectă a bolii |
-
-**Status:** antrenament în desfășurare.
-
-**Așteptări:** Precision > 0.70, mAP50 > 0.70
+**Decizie:** trecem la **clasificare** ca abordare principală. Detection cu bbox-uri reale rămâne ca plan pe termen lung (Pasul 2 — adnotare manuală în Roboflow).
 
 ---
 
-## To-Do următori pași
+## Ramura Classification (abordare principală)
 
-- [ ] `train-pi-model` — exportare model optimizat pentru Raspberry Pi 5 (TFLite / ONNX)
-- [ ] `optimize-inference` — benchmark inferență pe Pi 5, target < 100ms/frame
-- [ ] `build-control-logic` — strat de decizie PID bazat pe output-ul modelului
-- [ ] `test-on-pi` — testare pipeline complet pe hardware real
+### Trial C1 — Classification nano, imgsz=224
+
+**Run:** `runs/classify/runs/classify/basil_health_v1/`
+
+| Parametru | Valoare |
+|---|---|
+| Model | `yolov8n-cls.pt` (nano, 2.7M params) |
+| imgsz | 224 |
+| Batch | 128 |
+| lr0 | 0.001 |
+| Epoci | 24/100 (early stop) |
+
+| Metrică | Valoare |
+|---|---|
+| **Top-1 Accuracy** | **76.95%** |
+| Top-5 Accuracy | 100% |
+
+**Problemă:** Overfitting sever — train_loss=0.27 vs val_loss=1.29. `batch=128` → doar 7 batch-uri/epocă, insuficient. `imgsz=224` prea mic pentru imagini de 392px.
 
 ---
 
-*Ultima actualizare: 2026-06-11*
+### Trial C2 — Classification nano, imgsz=320, regularizare
+
+**Run:** `runs/classify/runs/classify/basil_health_v2/`
+
+| Parametru | C1 | C2 |
+|---|---|---|
+| imgsz | 224 | **320** |
+| Batch | 128 | **32** |
+| lr0 | 0.001 | **0.0003** |
+| cos_lr | — | **True** |
+| label_smoothing | — | **0.1** |
+| dropout | — | **0.2** |
+| Epoci | 24 | 54/150 |
+
+| Metrică | Valoare |
+|---|---|
+| **Top-1 Accuracy** | **78.44%** |
+| Top-5 Accuracy | 100% |
+| Gap val-train loss | 0.46 (overfitting moderat) |
+
+**Îmbunătățire:** +1.5% vs C1. Val_loss mai stabil (0.54–0.93). Dar plafonul nano persistă — modelul nu are suficientă capacitate.
+
+---
+
+### Trial C3 — Classification small, imgsz=320
+
+**Run:** `runs/classify/runs/classify/basil_health_v3/`
+
+| Parametru | C2 | C3 |
+|---|---|---|
+| Model | `yolov8n-cls` (2.7M) | **`yolov8s-cls` (6.5M)** |
+| Restul | identic | identic |
+| Epoci | 54 | 41/150 |
+
+| Metrică | Valoare |
+|---|---|
+| **Top-1 Accuracy** | **81.04%** |
+| Top-5 Accuracy | 100% |
+| Gap val-train loss | 0.47 (overfitting moderat) |
+
+**Îmbunătățire:** +2.6% vs C2. Model small prinde mai bine pattern-urile subtile ale bolilor.
+
+**Problemă rămasă:** val_loss oscilant (0.54–0.94). Cauza probabilă: 269 imagini val = set mic → metrici zgomotoase. Overfitting moderat persistent.
+
+**Cel mai bun model actual:** `runs/classify/runs/classify/basil_health_v3/weights/best.pt` — **81.04% Top-1**
+
+---
+
+### Trial C4 — Classification small, imgsz=416, lr=0.0001
+
+**Run:** `runs/classify/runs/classify/basil_health_v4/`
+
+| Parametru | C3 | C4 |
+|---|---|---|
+| Model | `yolov8s-cls` | `yolov8s-cls` (identic) |
+| imgsz | 320 | **416** |
+| lr0 | 0.0003 | **0.0001** |
+| weight_decay | — | **0.002** |
+| dropout | 0.2 | **0.3** |
+| patience | — | **15** |
+| warmup_epochs | — | **5** |
+| Epoci | 41 | 58/200 (early stop ep. 43) |
+
+| Metrică | Valoare |
+|---|---|
+| **Top-1 Accuracy** | **79.93%** |
+| Top-5 Accuracy | 100% |
+
+**Concluzie:** C4 nu a depășit C3. Creșterea `imgsz` la 416 și reducerea `lr0` la 0.0001 au dus la convergență mai lentă, dar platoul a rămas sub C3. Early stopping a oprit antrenamentul la epoca 58 (best = ep. 43). Overfitting-ul moderat persistent — val_loss oscilant din cauza setului mic de validare (269 imagini).
+
+**Cel mai bun model:** `runs/classify/runs/classify/basil_health_v3/weights/best.pt` — **81.04% Top-1** (C3 rămâne campion)
+
+---
+
+## Plan următori pași
+
+### Scurt termen — îmbunătățire model clasificare
+- [x] C4: `imgsz=416`, `lr0=0.0001`, `patience=15` — 79.93% (sub C3)
+- [ ] Verificare per-clasă: confusion matrix pentru a vedea care clasă e problema
+
+### Termen mediu — detection cu bbox-uri reale
+- [ ] Adnotare 300-400 imagini în **Roboflow Annotate** (gratuit) cu bbox-uri reale pe leziuni
+- [ ] Reantrenare `yolov8s.pt` (detection) pe datele adnotate → target mAP50 > 0.80
+
+### Deployment
+- [ ] Export `best.pt` → ONNX / TFLite pentru Raspberry Pi 5
+- [ ] Benchmark inferență pe Pi 5 (target < 100ms/frame)
+- [ ] Strat de decizie PID bazat pe output clasificare
+- [ ] Test pipeline complet pe hardware real
+
+---
+
+*Ultima actualizare: 2026-06-11 — C4 finalizat (79.93%), C3 rămâne best (81.04%)*
