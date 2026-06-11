@@ -1,0 +1,9 @@
+path: /Users/iustiniuliandodita/sera-hidroponica/basil_classification_dataset
+train: train
+val: val
+test: test
+
+names:
+  0: healthy
+  1: fusarium
+  2: powdery
