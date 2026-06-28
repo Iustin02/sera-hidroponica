@@ -185,7 +185,47 @@ Script: `train_basil_complete.py` → `yolov8n.pt` pe `basil_dataset` (5 clase),
 
 **Concluzie:** C4 nu a depășit C3. Creșterea `imgsz` la 416 și reducerea `lr0` la 0.0001 au dus la convergență mai lentă, dar platoul a rămas sub C3. Early stopping a oprit antrenamentul la epoca 58 (best = ep. 43). Overfitting-ul moderat persistent — val_loss oscilant din cauza setului mic de validare (269 imagini).
 
-**Cel mai bun model:** `runs/classify/runs/classify/basil_health_v3/weights/best.pt` — **81.04% Top-1** (C3 rămâne campion)
+**Cel mai bun model:** `runs/classify/runs/classify/basil_health_v3/weights/best.pt` — **81.04% Top-1** (C3 rămâne campion la momentul C4)
+
+---
+
+### Trial C5 — `basil_health_v4-2` (re-rulare config C4, antrenament lung)
+
+**Run:** `runs/classify/runs/classify/basil_health_v4-2/`  
+**Data:** 2026-06-16
+
+Re-rulare a configurației C4 (`yolov8s-cls`, `imgsz=416`, `lr0=0.0001`, `dropout=0.3`, `weight_decay=0.002`, `patience=15`) lăsată să ruleze mult mai mult — **97 epoci** (vs 58 la C4), pe datasetul de clasificare extins (3 clase).
+
+| Parametru | C4 (`v4`) | C5 (`v4-2`) |
+|---|---|---|
+| Model | `yolov8s-cls` | `yolov8s-cls` (identic) |
+| imgsz | 416 | 416 |
+| lr0 | 0.0001 | 0.0001 |
+| dropout | 0.3 | 0.3 |
+| Epoci | 58 | **97** |
+
+| Metrică | Valoare |
+|---|---|
+| **Top-1 Accuracy (best epoch)** | **86.74%** 🏆 |
+| Top-1 Accuracy (epoca finală 97) | 83.29% |
+| Top-5 Accuracy | 100% |
+| train/loss (final) | 0.078 |
+| val/loss (final) | 0.590 |
+
+**Concluzie:** Antrenamentul lung al aceleiași configurații a depășit clar C3. Best-epoch ajunge la **86.74%**, cu epocile finale stabilizate în jur de 83%. val_loss scade constant la 0.59 (cel mai mic gap val-train de până acum). **Acesta este cel mai bun model antrenat până în prezent** și ultima variantă reală (3 clase).
+
+**Cel mai bun model actual:** `runs/classify/runs/classify/basil_health_v4-2/weights/best.pt` — **86.74% Top-1**
+
+> ⚠️ **Notă pentru teză:** Capitolul 6 al lucrării citează în prezent C3 (81.04%) ca model validat. v4-2 (86.74%) este ulterior și nedocumentat în teză — de decis dacă se actualizează narațiunea tezei la noul best sau se păstrează C3 ca rezultat raportat.
+
+---
+
+### Trial C6 — `basil_health_v5` (abandonat)
+
+**Run:** `runs/classify/runs/classify/basil_health_v5/`  
+**Data:** 2026-06-16
+
+Aceeași configurație, oprit manual după **2 epoci** (Top-1 = 59.08%, încă în warmup). Run incomplet, păstrat doar ca referință. Fără valoare pentru evaluare.
 
 ---
 
@@ -193,7 +233,9 @@ Script: `train_basil_complete.py` → `yolov8n.pt` pe `basil_dataset` (5 clase),
 
 ### Scurt termen — îmbunătățire model clasificare
 - [x] C4: `imgsz=416`, `lr0=0.0001`, `patience=15` — 79.93% (sub C3)
+- [x] C5 (`v4-2`): aceeași config, 97 epoci — **86.74%** (nou best, peste C3)
 - [ ] Verificare per-clasă: confusion matrix pentru a vedea care clasă e problema
+- [ ] Decizie teză: actualizare narațiune Cap. 6 la C5 (86.74%) sau păstrare C3 (81.04%)
 
 ### Termen mediu — detection cu bbox-uri reale
 - [ ] Adnotare 300-400 imagini în **Roboflow Annotate** (gratuit) cu bbox-uri reale pe leziuni
@@ -207,4 +249,4 @@ Script: `train_basil_complete.py` → `yolov8n.pt` pe `basil_dataset` (5 clase),
 
 ---
 
-*Ultima actualizare: 2026-06-11 — C4 finalizat (79.93%), C3 rămâne best (81.04%)*
+*Ultima actualizare: 2026-06-28 — C5 (`basil_health_v4-2`) finalizat la 97 epoci: **86.74% Top-1 (best epoch)** — nou campion, peste C3 (81.04%). C6 (`v5`) abandonat la 2 epoci.*
