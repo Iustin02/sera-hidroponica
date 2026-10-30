@@ -1,0 +1,11 @@
+# Dataset clasificare busuioc — format folder (un subfolder per clasa).
+# Ultralytics ignora `names` la clasificare si atribuie indicii in ordinea
+# alfabetica a folderelor; lista de mai jos reflecta exact acea ordine.
+train: train
+val: val
+test: test
+
+names:
+  0: fusarium   # Fusarium oxysporum (fuzarioza)
+  1: healthy    # planta sanatoasa
+  2: powdery    # Oidium belbahrii (fainare)

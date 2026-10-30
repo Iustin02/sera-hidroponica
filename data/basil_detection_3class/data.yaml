@@ -1,0 +1,9 @@
+train: images/train
+val: images/val
+test: images/test
+
+nc: 3
+names:
+  0: "healthy (sanatoasa)"
+  1: "Fusarium oxysporum (fusarioza)"
+  2: "Oidium belbahrii (fainare)"

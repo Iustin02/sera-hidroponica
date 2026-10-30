@@ -1,65 +1,44 @@
-# Sera Hidroponica - Git Ignore
-
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-ENV/
-env/
 .venv/
-
-# Jupyter
+venv/
+env/
 .ipynb_checkpoints/
-*.ipynb
 
-# IDE
+# Editor / OS
 .vscode/
 .idea/
 *.swp
-*.swo
 .DS_Store
+Thumbs.db
 
-# Logs
+# Loguri și temporare
 *.log
 nohup.out
-
-# YOLOv8 - Modele mari (descarcă automat la rulare)
-*.pt
-!runs/detect/*/weights/best.pt
-
-# Rezultate antrenament - păstrează doar best.pt
-runs/detect/*/weights/last.pt
-runs/detect/*/*.png
-runs/detect/*/*.jpg
-runs/detect/*/labels/
-
-# Local autolabel runs (contain images)
-runs/autolabel/
-
-# Dataset cache
-*.cache
-*.npy
-
-# Modele pretrained (se descarcă automat)
-yolov8*.pt
-
-# Temporary
 *.tmp
-*.temp
-.temp/
+*.cache
 
-# iNaturalist datasets (local)
-inat_datasets/
+# Fișiere locale (moșteniri, weights pre-antrenate, notițe)
+.local/
 
-# Local datasets (do not commit)
+# Weights pre-antrenate Ultralytics (se descarcă automat)
+/yolov8*.pt
+/yolo11*.pt
+
+# Weights: se versionează doar best.pt din run-uri și modelele din models/
+*.pt
+!experiments/**/weights/best.pt
+!models/*.pt
+experiments/**/weights/last.pt
+
+# Artefacte generate
+*.onnx
+*.tflite
+date/
+config/*.json
+runs/
+
+# Seturi de date locale suplimentare
 datasets/
-
-# Derived datasets (local)
-
-# OS
-Thumbs.db
-.DS_Store
-*.bak
+inat_datasets/

@@ -1,0 +1,8 @@
+# Raspberry Pi 5 (Raspberry Pi OS 64-bit). Creează venv-ul cu --system-site-packages
+# ca să refolosești python3-opencv și gpiozero din apt.
+ultralytics>=8.4,<9
+torch>=2.2
+onnxruntime>=1.17               # inferență după export ONNX
+gpiozero>=2.0
+lgpio>=0.2
+adafruit-circuitpython-ads1x15>=2.2   # ADC pentru pH și EC

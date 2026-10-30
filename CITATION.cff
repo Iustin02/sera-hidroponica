@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "Dacă folosești acest proiect, te rog să-l citezi după cum urmează."
+title: "Utilizarea Edge AI în managementul autonom al culturilor NFT"
+abstract: >-
+  Sistem hidroponic NFT autonom pentru busuioc (Ocimum basilicum), cu monitorizarea a
+  șapte parametri agronomici, control în buclă închisă și diagnostic fitosanitar
+  Edge AI (YOLOv8s-cls) pe Raspberry Pi 5.
+type: software
+authors:
+  - family-names: "Dodiță"
+    given-names: "Iustin Iulian"
+contributors:
+  - family-names: "Buzduga"
+    given-names: "Corneliu"
+    affiliation: "Universitatea Ștefan cel Mare din Suceava"
+repository-code: "https://github.com/Iustin02/sera-hidroponica"
+license: MIT
+date-released: "2026-10-30"
+keywords:
+  - edge-ai
+  - hydroponics
+  - nutrient-film-technique
+  - yolov8
+  - raspberry-pi
+  - plant-disease-classification
+references:
+  - type: thesis
+    title: "Utilizarea Edge AI în managementul autonom al culturilor NFT"
+    authors:
+      - family-names: "Dodiță"
+        given-names: "Iustin Iulian"
+    thesis-type: "Proiect de diplomă"
+    institution:
+      name: "Universitatea Ștefan cel Mare din Suceava, Facultatea de Inginerie Electrică și Știința Calculatoarelor"
+    year: 2026
